@@ -1,0 +1,31 @@
+# ---- KVKK / müşteri verisi: ASLA commit edilmez ----
+*.pdf
+*.xlsx
+*.xls
+*.bmp
+/data/
+/ornekler/
+/samples/
+/test-data/
+*-logosuz.pdf
+TECDIT*
+TECDİT*
+
+# ---- .NET build çıktıları ----
+bin/
+obj/
+out/
+publish/
+*.user
+*.suo
+.vs/
+
+# ---- Genel ----
+*.log
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- Yapılandırma (yerel yollar / gizli) ----
+appsettings.local.json
+config.local.json
