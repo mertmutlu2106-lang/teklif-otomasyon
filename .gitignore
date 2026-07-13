@@ -3,6 +3,12 @@
 *.xlsx
 *.xls
 *.bmp
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.tif
+*.tiff
 /data/
 /ornekler/
 /samples/
