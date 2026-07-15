@@ -33,5 +33,5 @@ desktop.ini
 .DS_Store
 
 # ---- Yapılandırma (yerel yollar / gizli) ----
-appsettings.local.json
-config.local.json
+# yazim-gecmisi.local.json plaka içerir → KVKK
+*.local.json

@@ -2,10 +2,12 @@ using System.Text.Json;
 
 namespace TeklifOtomasyon;
 
-/// <summary>Basit yerel ayar (hedef Excel yolu). exe yanında json olarak saklanır.</summary>
+/// <summary>Basit yerel ayar (hedef Excel yolu, izlenecek klasör). exe yanında json olarak saklanır.</summary>
 public class Config
 {
     public string? ExcelYolu { get; set; }
+    public string? IzlenecekKlasor { get; set; }
+    public bool IzlemeAcik { get; set; }
 
     private static string Yol => Path.Combine(AppContext.BaseDirectory, "appsettings.local.json");
 

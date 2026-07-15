@@ -15,6 +15,8 @@ public class YazimSonucu
     public string PdfAdi = "";
     public bool Coklu;                        // birden fazla eşleşme (güvenlik için yazılmaz)
     public bool Atlandi;                       // liste zaten yazılmış → tekrar eklenmedi
+    public bool AdUyusmazligi;                 // dosya adı ile PDF içeriği çelişiyor (güvenlik için yazılmaz)
+    public string? GecmisTarihi;               // bu plaka+branş için daha önce yazılmışsa tarihi
     public List<int> EslesenSatirlar = new();
     public string KaynakMod = "";             // "açık dosya" / "dosya açıldı"
 }
@@ -22,7 +24,9 @@ public class YazimSonucu
 /// <summary>TECDİT Excel'ine (COM interop) MERT metnini ekler. Tek oturumda toplu işler.</summary>
 public static class ExcelYazici
 {
-    private const string Ayrac = " --- ";
+    // Hücredeki mevcut içerik ile aracın bloğu arasına girer. Kullanıcının elle yazdığı
+    // blok ayracıyla aynı stil (MertFormatter'ın şirket arası " --- " ayracı bundan ayrı).
+    private const string Ayrac = "-----";
 
     public static List<YazimSonucu> Isle(
         string excelYolu,
@@ -134,6 +138,20 @@ public static class ExcelYazici
             return s;
         }
 
+        // Dosya adı çapraz kontrolü: Open adın içine plaka/branş/TC yazıyor. Parser'ın PDF
+        // içinden okuduğuyla çelişiyorsa yanlış satıra yazma riski var → hiç yazma.
+        var adBilgi = DosyaAdi.Coz(pdfAdi);
+        string? cakisma = AdCakismasi(adBilgi, t);
+        if (cakisma is not null)
+        {
+            s.AdUyusmazligi = true;
+            s.Mesaj = $"Dosya adı PDF içeriğiyle çelişiyor ({cakisma}) — güvenlik için YAZILMADI.";
+            Log.Yaz($"  {pdfAdi}: AD UYUSMAZLIGI {cakisma}");
+            return s;
+        }
+
+        s.GecmisTarihi = YazimGecmisi.Bul(t.Plaka, t.Brans)?.Tarih;
+
         dynamic ws = wb.Worksheets[sayfa];
         dynamic used = ws.UsedRange;
         int lastRow = (int)used.Row + (int)used.Rows.Count - 1;
@@ -215,8 +233,24 @@ public static class ExcelYazici
         return s;
     }
 
+    /// <summary>Dosya adındaki plaka/TC ile PDF'ten okunanları karşılaştırır. İkisi de doluyken
+    /// farklıysa çakışma adını döner; biri boşsa (ör. TcGizle açıksa) kontrol atlanır.</summary>
+    private static string? AdCakismasi(DosyaAdiBilgi ad, TeklifCalismasi t)
+    {
+        if (ad.Plaka is not null && !string.IsNullOrWhiteSpace(t.Plaka) && Norm(ad.Plaka) != Norm(t.Plaka))
+            return $"plaka: ad={ad.Plaka} pdf={t.Plaka}";
+
+        if (ad.Tc is not null && !string.IsNullOrWhiteSpace(t.Tc) && ad.Tc != t.Tc.Trim())
+            return "TC";
+
+        if (ad.Brans != Brans.Bilinmiyor && ad.Brans != t.Brans)
+            return $"branş: ad={ad.Brans} pdf={t.Brans}";
+
+        return null;
+    }
+
     private static string Str(object? o) => o?.ToString() ?? "";
 
-    private static string Norm(string? s) =>
+    internal static string Norm(string? s) =>
         (s ?? "").Replace(" ", "").Replace("-", "").ToUpperInvariant();
 }
